@@ -48,7 +48,13 @@ class MitsubishiAPI:
         self.admin_password = admin_password
         self.session = requests.Session()
 
-        # Add retry logic with backoff for better reliability
+        # Retry and timeouts:
+        # We are on a local WiFi network. If the device is actually reachable, we except
+        # a very fast connect time. Linux retries the SYN after 1 second, so by giving a
+        # 2 second connect timeout, we get 2 tries to get the TCP connection open.
+        #
+        # Read timeout can be greater
+        self.api_timeout = (2, 5)
         retries = Retry(total=4, backoff_factor=1)
         self.session.mount("http://", HTTPAdapter(max_retries=retries))
 
@@ -151,7 +157,7 @@ class MitsubishiAPI:
 
         url = f"http://{self.device_host_port}/smart"
 
-        response = self.session.post(url, data=request_body, headers=headers, timeout=2)  # may raise
+        response = self.session.post(url, data=request_body, headers=headers, timeout=self.api_timeout)  # may raise
         response.raise_for_status()  # may raise
 
         logger.debug("Response Text:")
