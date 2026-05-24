@@ -36,7 +36,7 @@ controller = MitsubishiController(api=api)
 
 # Fetch device status
 controller.fetch_status()
-pprint(controller.data)
+pprint(controller.state)
 
 # Control the device
 controller.set_power(True)
