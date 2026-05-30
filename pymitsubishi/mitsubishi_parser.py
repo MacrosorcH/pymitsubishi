@@ -284,14 +284,17 @@ class SensorStates:
     """Parsed sensor states from device response"""
 
     inside_temperature_1_coarse: int = 24
-    outside_temperature: float = 21.0
-    inside_temperature_1_fine: float = 24.5
-    inside_temperature_2: float = 24.0
+    outside_temperature: float | None = 21.0
+    inside_temperature_1_fine: float | None = 24.5
+    inside_temperature_2: float | None = 24.0
     runtime_minutes: int = 0
 
     @property
     def room_temperature(self) -> float:
-        return self.inside_temperature_1_fine
+        if self.inside_temperature_1_fine is not None:
+            return self.inside_temperature_1_fine
+        else:
+            return self.inside_temperature_1_coarse
 
     @staticmethod
     def is_sensor_states_payload(data: bytes) -> bool:
@@ -333,8 +336,16 @@ class SensorStates:
             log_unexpected_value(cls.__name__, 9, data[9:10])
 
         obj.outside_temperature = (data[10] - 0x80) * 0.5
+        if obj.outside_temperature == -64:
+            obj.outside_temperature = None
+
         obj.inside_temperature_1_fine = (data[11] - 0x80) * 0.5
+        if obj.inside_temperature_1_fine == -64:
+            obj.inside_temperature_1_fine = None
+
         obj.inside_temperature_2 = (data[12] - 0x80) * 0.5
+        if obj.inside_temperature_2 == -64:
+            obj.inside_temperature_2 = None
         # What's the difference between data[8], data[11] and data[12]?
         # data[8] and data[11] seem to be the exact same value (with different conversion & thus truncation)
         # but they seem to move exactly together
