@@ -9,6 +9,14 @@ __version__ = "0.5.1"
 
 # Import main classes for easy access
 from .mitsubishi_api import MitsubishiAPI
+from .mitsubishi_atw import (
+    EcodanOperationMode,
+    EcodanStatus,
+    FTCVersion,
+    ZoneMode,
+    is_atw_payload,
+    parse_atw_code_values,
+)
 from .mitsubishi_controller import MitsubishiController
 from .mitsubishi_parser import (
     AutoMode,
@@ -44,4 +52,11 @@ __all__ = [
     "ParsedDeviceState",
     "RemoteLock",
     "SetRemoteTemperature",
+    # Air-to-water (Ecodan) public API
+    "EcodanStatus",
+    "EcodanOperationMode",
+    "ZoneMode",
+    "FTCVersion",
+    "is_atw_payload",
+    "parse_atw_code_values",
 ]
