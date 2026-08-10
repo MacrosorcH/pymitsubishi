@@ -55,7 +55,11 @@ class MitsubishiAPI:
         #
         # Read timeout can be greater
         self.api_timeout = (2, 5)
-        retries = Retry(total=4, backoff_factor=1)
+        # Each request opens a fresh connection (Connection: close), but that
+        # connection can still fail transiently. allowed_methods=None lets the retry
+        # cover POST too (urllib3 excludes it by default), since all /smart traffic
+        # is POST and the commands are idempotent.
+        retries = Retry(total=4, backoff_factor=1, allowed_methods=None)
         self.session.mount("http://", HTTPAdapter(max_retries=retries))
 
     def get_crypto_key(self) -> bytes:
@@ -148,8 +152,7 @@ class MitsubishiAPI:
         headers = {
             "Host": f"{self.device_host_port}",
             "Content-Type": "text/plain;chrset=UTF-8",
-            "Connection": "keep-alive",
-            "Proxy-Connection": "keep-alive",
+            "Connection": "close",
             "Accept": "*/*",
             "User-Agent": "KirigamineRemote/5.1.0 (jp.co.MitsubishiElectric.KirigamineRemote; build:3; iOS 17.5.1) Alamofire/5.9.1",
             "Accept-Language": "zh-Hant-JP;q=1.0, ja-JP;q=0.9",
