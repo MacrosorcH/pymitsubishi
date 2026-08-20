@@ -597,6 +597,10 @@ class ParsedDeviceState:
     serial: str = ""
     rssi: str = ""
     app_version: str = ""
+    # Cloud (MELCloud) connection setting and ECHONET Lite setting as reported
+    # by the adapter. None when the device did not report the field.
+    cloud_connect: bool | None = None
+    echonet_enabled: bool | None = None
 
     _unknown5: Unknown5States | None = None
 
