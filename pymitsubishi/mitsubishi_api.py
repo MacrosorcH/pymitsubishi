@@ -176,9 +176,22 @@ class MitsubishiAPI:
     def send_reboot_request(self) -> str:
         return self.make_request("<CSV><RESET></RESET></CSV>")
 
-    def send_status_request(self) -> str:
-        """Send a status request to get current device state"""
-        payload_xml = "<CSV><CONNECT>ON</CONNECT></CSV>"
+    def send_status_request(self, connect: bool | None = None) -> str:
+        """Send a status request to get current device state.
+
+        The CONNECT element is not a request flag: the adapter treats it as a
+        setting and writes it, so sending CONNECT ON on every poll silently
+        re-enables the MELCloud connection for anyone running local-only.
+        Omitting the element returns the same status payload and leaves the
+        cloud setting untouched, so that is the default.
+
+        connect=None leaves the cloud connection as-is, True enables it and
+        False disables it.
+        """
+        if connect is None:
+            payload_xml = "<CSV></CSV>"
+        else:
+            payload_xml = f"<CSV><CONNECT>{'ON' if connect else 'OFF'}</CONNECT></CSV>"
         return self.make_request(payload_xml)
 
     def send_echonet_enable(self) -> str:

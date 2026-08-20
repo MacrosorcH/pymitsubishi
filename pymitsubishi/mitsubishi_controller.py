@@ -110,10 +110,22 @@ class MitsubishiController:
         api = MitsubishiAPI(device_host_port=device_host_port, encryption_key=encryption_key)
         return cls(api)
 
-    def fetch_status(self) -> ParsedDeviceState:
-        """Fetch current device status and optionally detect capabilities"""
-        response = self.api.send_status_request()  # may raise
+    def fetch_status(self, connect: bool | None = None) -> ParsedDeviceState:
+        """Fetch current device status and optionally detect capabilities.
+
+        connect=None (the default) leaves the MELCloud connection setting
+        untouched. Pass True or False only to change it.
+        """
+        response = self.api.send_status_request(connect=connect)  # may raise
         return self._parse_status_response(response)
+
+    def set_cloud_connect(self, enabled: bool) -> ParsedDeviceState:
+        """Enable or disable the adapter's connection to the MELCloud servers.
+
+        Local control over /smart keeps working while the cloud connection is
+        disabled.
+        """
+        return self.fetch_status(connect=enabled)
 
     def _parse_status_response(self, response: str) -> ParsedDeviceState:
         """Parse the device status response and update state"""
@@ -135,6 +147,12 @@ class MitsubishiController:
         serial_elem = root.find(".//SERIAL")
         if serial_elem is not None and serial_elem.text is not None:
             self.state.serial = serial_elem.text
+
+        # The adapter echoes its current cloud and ECHONET Lite settings.
+        for tag, attr in (("CONNECT", "cloud_connect"), ("ECHONET", "echonet_enabled")):
+            elem = root.find(f".//{tag}")
+            if elem is not None and elem.text is not None:
+                setattr(self.state, attr, elem.text.strip().upper() == "ON")
 
         profile_elems = root.findall(".//PROFILECODE/DATA/VALUE") or root.findall(".//PROFILECODE/VALUE")
         self.profile_code = []
